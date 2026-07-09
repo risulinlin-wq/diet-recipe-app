@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ダイエット料理レシピ提案アプリ</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --surface-0: #f5f4f0;
+      --surface-1: #eeece7;
+      --surface-2: #ffffff;
+      --text-primary: #1a1a18;
+      --text-secondary: #5f5e5a;
+      --text-muted: #888780;
+      --border: rgba(0,0,0,0.10);
+      --border-strong: rgba(0,0,0,0.18);
+      --radius: 8px;
+      --bg-accent: #FBEAF0;
+      --text-accent: #72243E;
+      --border-accent: #D4537E;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --surface-0: #1a1a18;
+        --surface-1: #252522;
+        --surface-2: #2e2e2b;
+        --text-primary: #f0eee8;
+        --text-secondary: #a8a69e;
+        --text-muted: #6e6c66;
+        --border: rgba(255,255,255,0.10);
+        --border-strong: rgba(255,255,255,0.18);
+        --bg-accent: #3a1624;
+        --text-accent: #f4a0bc;
+        --border-accent: #993556;
+      }
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--surface-0);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .app {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* ヘッダー */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--bg-accent);
+      color: var(--text-accent);
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .header p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* APIキー入力欄 */
+    .api-section {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .api-section summary {
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+    .api-section summary:hover { color: var(--text-primary); }
+    .api-inner { margin-top: 10px; }
+    .api-inner label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 6px; }
+    .api-inner input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--text-primary);
+      background: var(--surface-0);
+      font-family: var(--font-sans);
+    }
+    .api-inner input:focus { outline: none; border-color: var(--border-accent); }
+    .api-note { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .api-note a { color: var(--border-accent); }
+
+    /* 食材入力 */
+    .section-card {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .section-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+    .sub-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+
+    .quick-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .quick-tag {
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--surface-1);
+      color: var(--text-secondary);
+      border: 0.5px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .quick-tag:hover { background: var(--bg-accent); color: var(--text-accent); border-color: var(--border-accent); }
+
+    .input-row { display: flex; gap: 8px; }
+    .ingredient-input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-size: 15px;
+      color: var(--text-primary);
+      background: var(--surface-0);
+      font-family: var(--font-sans);
+    }
+    .ingredient-input:focus { outline: none; border-color: var(--border-accent); }
+    .add-btn {
+      padding: 9px 16px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      white-space: nowrap;
+    }
+    .add-btn:hover { background: var(--surface-1); }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; min-height: 10px; }
+    .tag {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-accent);
+      color: var(--text-accent);
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .tag-remove { cursor: pointer; font-size: 15px; line-height: 1; opacity: 0.7; }
+    .tag-remove:hover { opacity: 1; }
+
+    /* 目標選択 */
+    .goal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .goal-btn {
+      padding: 10px 8px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: transparent;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: center;
+      font-family: var(--font-sans);
+      transition: background 0.15s;
+    }
+    .goal-btn:hover { background: var(--surface-1); }
+    .goal-btn.active {
+      background: var(--bg-accent);
+      border-color: var(--border-accent);
+      color: var(--text-accent);
+      font-weight: 500;
+    }
+
+    /* 生成ボタン */
+    .generate-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius);
+      background: #D4537E;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: background 0.15s;
+      margin-top: 0.5rem;
+    }
+    .generate-btn:hover { background: #993556; }
+    .generate-btn:disabled { background: var(--border-strong); cursor: not-allowed; color: var(--text-muted); }
+
+    /* 結果 */
+    .results { margin-top: 1.5rem; }
+    .results-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
+    .recipe-card {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 10px;
+    }
+    .recipe-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .recipe-name { font-size: 16px; font-weight: 500; color: var(--text-primary); }
+    .recipe-kcal { font-size: 13px; color: #D4537E; font-weight: 500; white-space: nowrap; margin-left: 8px; }
+    .recipe-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 10px; }
+    .recipe-point { font-size: 13px; color: #D4537E; margin-bottom: 10px; }
+    .recipe-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+    .meta-tag {
+      font-size: 12px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--surface-1);
+      color: var(--text-secondary);
+      border: 0.5px solid var(--border);
+    }
+    .meta-tag.green { background: #EAF3DE; color: #3B6D11; border-color: #C0DD97; }
+
+    /* ローディング・エラー */
+    .loading {
+      text-align: center;
+      padding: 2.5rem 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .error-msg {
+      background: #FCEBEB;
+      border: 0.5px solid #F09595;
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #A32D2D;
+      margin-top: 1rem;
+    }
+
+    /* フッター */
+    .footer {
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="badge">✨ 女性のための健康ごはん</div>
+    <h1>ダイエット料理レシピ提案</h1>
+    <p>食材を入れるだけで、栄養バランスのとれた3品をご提案</p>
+  </div>
+
+  <!-- APIキー設定 -->
+  <details class="api-section">
+    <summary>⚙️ Anthropic APIキーを設定する</summary>
+    <div class="api-inner">
+      <label for="apiKeyInput">APIキー（sk-ant-...）</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+      <p class="api-note">
+        APIキーは <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> で取得できます。このキーはブラウザ内のみで使用され、外部には送信されません。
+      </p>
+    </div>
+  </details>
+
+  <!-- 食材入力 -->
+  <div class="section-card">
+    <div class="section-label">🛒 今ある食材を入力してください</div>
+    <div class="sub-label">よく使う食材（タップで追加）</div>
+    <div class="quick-tags">
+      <span class="quick-tag" onclick="addQuick('鶏むね肉')">🍗 鶏むね肉</span>
+      <span class="quick-tag" onclick="addQuick('豆腐')">🫙 豆腐</span>
+      <span class="quick-tag" onclick="addQuick('卵')">🥚 卵</span>
+      <span class="quick-tag" onclick="addQuick('ほうれん草')">🥬 ほうれん草</span>
+      <span class="quick-tag" onclick="addQuick('トマト')">🍅 トマト</span>
+      <span class="quick-tag" onclick="addQuick('きのこ')">🍄 きのこ</span>
+      <span class="quick-tag" onclick="addQuick('納豆')">納豆</span>
+      <span class="quick-tag" onclick="addQuick('鮭')">🐟 鮭</span>
+      <span class="quick-tag" onclick="addQuick('アボカド')">🥑 アボカド</span>
+      <span class="quick-tag" onclick="addQuick('ブロッコリー')">🥦 ブロッコリー</span>
+    </div>
+    <div class="input-row">
+      <input class="ingredient-input" id="ingredientInput" type="text"
+        placeholder="例：白菜、豚肉..." onkeydown="if(event.key==='Enter')addIngredient()" />
+      <button class="add-btn" onclick="addIngredient()">追加</button>
+    </div>
+    <div class="tags" id="tagContainer"></div>
+  </div>
+
+  <!-- 目標選択 -->
+  <div class="section-card">
+    <div class="section-label">🎯 ダイエット目標を選んでください</div>
+    <div class="goal-grid">
+      <button class="goal-btn active" id="goal-low"      onclick="setGoal('低カロリー重視',     'low')">🔥 低カロリー重視</button>
+      <button class="goal-btn"        id="goal-protein"  onclick="setGoal('たんぱく質補給',     'protein')">💪 たんぱく質補給</button>
+      <button class="goal-btn"        id="goal-gut"      onclick="setGoal('腸活・食物繊維',     'gut')">🌿 腸活・食物繊維</button>
+      <button class="goal-btn"        id="goal-beauty"   onclick="setGoal('美肌・アンチエイジング', 'beauty')">✨ 美肌・アンチエイジング</button>
+    </div>
+  </div>
+
+  <button class="generate-btn" id="generateBtn" onclick="generateRecipes()">
+    3品のレシピを提案する →
+  </button>
+
+  <div id="resultsArea"></div>
+
+  <div class="footer">Diet Recipe App — Powered by Claude AI</div>
+</div>
+
+<script>
+  let ingredients = [];
+  let selectedGoal = '低カロリー重視';
+
+  function addQuick(name) {
+    if (!ingredients.includes(name)) {
+      ingredients.push(name);
+      renderTags();
+    }
+  }
+
+  function addIngredient() {
+    const input = document.getElementById('ingredientInput');
+    const val = input.value.trim();
+    if (!val) return;
+    const parts = val.split(/[、,，\s]+/).filter(Boolean);
+    parts.forEach(p => { if (p && !ingredients.includes(p)) ingredients.push(p); });
+    input.value = '';
+    renderTags();
+  }
+
+  function removeIngredient(name) {
+    ingredients = ingredients.filter(i => i !== name);
+    renderTags();
+  }
+
+  function renderTags() {
+    const c = document.getElementById('tagContainer');
+    if (ingredients.length === 0) { c.innerHTML = ''; return; }
+    c.innerHTML = ingredients.map(i =>
+      `<span class="tag">${i}<span class="tag-remove" onclick="removeIngredient('${i}')">×</span></span>`
+    ).join('');
+  }
+
+  function setGoal(label, key) {
+    selectedGoal = label;
+    document.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('goal-' + key).classList.add('active');
+  }
+
+  async function generateRecipes() {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (!apiKey) {
+      document.getElementById('resultsArea').innerHTML =
+        '<div class="error-msg">⚙️ まずAPIキーを設定してください（ページ上部の設定欄）。</div>';
+      return;
+    }
+    if (ingredients.length === 0) {
+      document.getElementById('resultsArea').innerHTML =
+        '<div class="error-msg">食材を1つ以上追加してください。</div>';
+      return;
+    }
+
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = '考え中...';
+    document.getElementById('resultsArea').innerHTML =
+      '<div class="loading">🍳 ヘルシーレシピを考えています...</div>';
+
+    const prompt = `あなたは女性の健康的なダイエットを支援する栄養士です。
+以下の食材と目標に合った、自炊できるダイエット料理を3品提案してください。
+
+使用食材：${ingredients.join('、')}
+ダイエット目標：${selectedGoal}
+
+必ず以下のJSON形式のみで返してください（前置きや説明文・コードブロックは不要）：
+{
+  "recipes": [
+    {
+      "name": "料理名",
+      "kcal": "1人分のカロリー（例：280kcal）",
+      "time": "調理時間（例：15分）",
+      "difficulty": "難易度（簡単/普通/少し手間）",
+      "description": "料理の説明と健康効果（2〜3文）",
+      "point": "ダイエットのポイント（1文）",
+      "nutrients": ["栄養素1", "栄養素2", "栄養素3"]
+    }
+  ]
+}`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-calls': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1200,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `APIエラー (${res.status})`);
+      }
+
+      const data = await res.json();
+      const text = data.content?.find(b => b.type === 'text')?.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+      renderResults(parsed.recipes);
+    } catch (e) {
+      document.getElementById('resultsArea').innerHTML =
+        `<div class="error-msg">エラーが発生しました：${e.message}<br>APIキーや食材を確認してください。</div>`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = '3品のレシピを提案する →';
+  }
+
+  function renderResults(recipes) {
+    if (!recipes || recipes.length === 0) {
+      document.getElementById('resultsArea').innerHTML =
+        '<div class="error-msg">レシピを取得できませんでした。</div>';
+      return;
+    }
+    const nums = ['① ', '② ', '③ '];
+    const html = `
+      <div class="results">
+        <div class="results-label">🌸 ${selectedGoal}に合った3品のご提案</div>
+        ${recipes.map((r, i) => `
+          <div class="recipe-card">
+            <div class="recipe-header">
+              <span class="recipe-name">${nums[i] || ''}${r.name}</span>
+              <span class="recipe-kcal">${r.kcal}</span>
+            </div>
+            <div class="recipe-desc">${r.description}</div>
+            <div class="recipe-point">💡 ${r.point}</div>
+            <div class="recipe-meta">
+              <span class="meta-tag">⏱ ${r.time}</span>
+              <span class="meta-tag">${r.difficulty}</span>
+              ${(r.nutrients || []).map(n => `<span class="meta-tag green">${n}</span>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+    document.getElementById('resultsArea').innerHTML = html;
+  }
+</script>
+</body>
+</html>
